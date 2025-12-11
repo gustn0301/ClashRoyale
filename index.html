@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Clash Royale Web</title>
+    <style>
+        /* --- 기본 설정 및 폰트 --- */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+
+        :root {
+            --primary-blue: #366bf7;
+            --primary-gold: #fccf44;
+            --text-stroke: #000;
+            --bg-dark: #1c2b45;
+            --arena-grass: #4c9635;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #000;
+            color: white;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #app-container {
+            width: 100%;
+            height: 100%;
+            max-width: 500px; /* 모바일 비율 유지 */
+            background-color: var(--bg-dark);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* --- 공통 UI 요소 --- */
+        .hidden { display: none !important; }
+        
+        .btn {
+            border: 2px solid #000;
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 900;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #000;
+            transition: transform 0.1s, box-shadow 0.1s;
+            text-align: center;
+        }
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #000;
+        }
+        .btn-gold {
+            background-color: var(--primary-gold);
+            color: #4a2c0f;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+        }
+        .btn-red {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .btn-google {
+            background-color: white;
+            color: #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1rem;
+        }
+
+        /* --- 1. 로그인 화면 --- */
+        #login-screen {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
+        }
+        .logo {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--primary-gold);
+            text-shadow: 3px 3px 0 #000;
+            margin-bottom: 50px;
+        }
+        #loading-msg {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        /* --- 2. 홈 화면 --- */
+        #home-screen {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #2c3e50, #000);
+            position: relative;
+        }
+
+        /* 상단 프로필 바 */
+        .top-bar {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .profile-container {
+            position: relative;
+        }
+
+        .nickname-box {
+            background: rgba(0,0,0,0.6);
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 2px solid #555;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
+        .nickname-text {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+        .exp-bar {
+            height: 4px;
+            background: #366bf7;
+            width: 100%;
+            margin-top: 4px;
+            border-radius: 2px;
+        }
+
+        /* 드롭다운 메뉴 */
+        #profile-dropdown {
+            position: absolute;
+            top: 55px;
+            left: 0;
+            background: #333;
+            border: 2px solid #000;
+            border-radius: 8px;
+            width: 160px;
+            z-index: 100;
+            padding: 5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .dropdown-item {
+            padding: 10px;
+            border-bottom: 1px solid #444;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        .dropdown-item:last-child { border-bottom: none; }
+        .text-white { color: white; }
+        .text-red { color: #ff5e5e; font-weight: bold; }
+
+        /* 트로피 */
+        .trophy-display {
+            background: rgba(0,0,0,0.5);
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--primary-gold);
+            font-weight: 900;
+            font-size: 1.2rem;
+            border: 2px solid #8e6e22;
+        }
+
+        /* 캐릭터 표시 (장식) */
+        .home-character {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -60%);
+            font-size: 8rem;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+        }
+
+        /* 하단 전투 버튼 */
+        .bottom-bar {
+            position: absolute;
+            bottom: 30px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        #battle-btn {
+            background: linear-gradient(to bottom, #ffcc00, #ffaa00);
+            border: 3px solid #fff;
+            box-shadow: 0 5px 0 #cc8800, 0 8px 10px rgba(0,0,0,0.5);
+            font-size: 1.5rem;
+            padding: 15px 50px;
+            border-radius: 30px;
+            text-transform: uppercase;
+        }
+
+        /* --- 3. 매칭 화면 --- */
+        #matching-screen {
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .searching-text {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
+        /* --- 4. 게임 화면 (아레나) --- */
+        #game-screen {
+            width: 100%;
+            height: 100%;
+            background-color: var(--arena-grass);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 아레나 맵 */
+        #arena {
+            flex: 1;
+            position: relative;
+            background-image: 
+                linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            overflow: hidden;
+        }
+
+        /* 강 */
+        .river {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: #4a90e2;
+            transform: translateY(-50%);
+            border-top: 2px solid #5d4037;
+            border-bottom: 2px solid #5d4037;
+            z-index: 1;
+        }
+
+        /* 다리 */
+        .bridge {
+            position: absolute;
+            width: 40px;
+            height: 60px;
+            background: #8d6e63;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 2;
+            border-left: 2px solid #3e2723;
+            border-right: 2px solid #3e2723;
+        }
+        .bridge.left { left: 20%; }
+        .bridge.right { right: 20%; }
+
+        /* 타워 공통 */
+        .tower {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 5;
+            font-size: 2rem;
+        }
+        .hp-bar-container {
+            width: 60px;
+            height: 6px;
+            background: #333;
+            margin-bottom: 2px;
+            border: 1px solid #000;
+        }
+        .hp-bar { height: 100%; background: #2ecc71; width: 100%; transition: width 0.2s; }
+        .tower.enemy .hp-bar { background: #e74c3c; }
+
+        /* 타워 위치 */
+        .king-tower { left: 50%; transform: translateX(-50%); width: 70px; height: 70px; font-size: 3rem;}
+        .princess-tower { width: 50px; height: 50px; }
+        
+        /* 아군 타워 (아래) */
+        .my-king { bottom: 100px; }
+        .my-princess.left { bottom: 180px; left: 15%; }
+        .my-princess.right { bottom: 180px; right: 15%; }
+
+        /* 적군 타워 (위) */
+        .enemy-king { top: 80px; }
+        .enemy-princess.left { top: 160px; left: 15%; }
+        .enemy-princess.right { top: 160px; right: 15%; }
+
+        /* 유닛 (Entity) */
+        .unit {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            font-size: 1.8rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform: translate(-50%, -50%);
+            transition: top 0.1s linear, left 0.1s linear;
+            z-index: 10;
+        }
+        .unit.enemy { filter: hue-rotate(180deg); } /* 적군은 색상 반전 효과 */
+        .unit-hp {
+            position: absolute;
+            top: -5px;
+            width: 30px;
+            height: 4px;
+            background: red;
+        }
+        .unit-hp-fill { background: lime; height: 100%; width: 100%; }
+
+        /* 투사체 */
+        .projectile {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: orange;
+            border-radius: 50%;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        /* 하단 카드 덱 UI */
+        #game-ui {
+            height: 140px;
+            background: #5d4037;
+            border-top: 4px solid #3e2723;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            position: relative;
+        }
+
+        .elixir-bar {
+            position: absolute;
+            top: -15px;
+            left: 0;
+            width: 100%;
+            height: 15px;
+            background: #333;
+        }
+        .elixir-fill {
+            height: 100%;
+            background: #d000ff;
+            width: 0%;
+            transition: width 0.5s linear;
+        }
+        .elixir-count {
+            position: absolute;
+            top: -30px;
+            right: 10px;
+            color: #d000ff;
+            font-weight: 900;
+            font-size: 1.5rem;
+            text-shadow: 1px 1px 0 #000;
+        }
+
+        .next-card {
+            width: 50px;
+            height: 70px;
+            background: #333;
+            border-radius: 5px;
+            margin-right: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: #aaa;
+        }
+        .next-card-icon { font-size: 1.5rem; }
+
+        .hand {
+            flex: 1;
+            display: flex;
+            justify-content: space-around;
+            gap: 5px;
+        }
+
+        .card {
+            width: 70px;
+            height: 90px;
+            background: #fff;
+            border: 2px solid #888;
+            border-radius: 5px;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2px;
+            transition: transform 0.1s;
+        }
+        .card.selected {
+            border: 3px solid var(--primary-gold);
+            transform: translateY(-10px);
+        }
+        .card.disabled {
+            filter: grayscale(1);
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .card-img { font-size: 2.5rem; margin-top: 5px; }
+        .card-cost {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            background: #d000ff;
+            color: white;
+            border: 1px solid #000;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        /* 결과 모달 */
+        #result-modal {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            display: none;
+        }
+        .result-title { font-size: 3rem; font-weight: 900; color: gold; margin-bottom: 20px; }
+        
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <!-- 1. 로그인 화면 -->
+    <div id="login-screen">
+        <div class="logo">CLASH ROYALE</div>
+        <!-- 버튼 초기 상태는 활성화 (로딩 텍스트 제거) -->
+        <button id="google-login-btn" class="btn btn-google">
+            <span style="font-weight:bold; color:#4285F4">G</span> <span id="login-btn-text">구글 계정으로 로그인</span>
+        </button>
+        <div id="loading-msg" class="hidden">처리 중...</div>
+    </div>
+
+    <!-- 2. 홈 화면 -->
+    <div id="home-screen" class="hidden">
+        <div class="top-bar">
+            <div class="profile-container">
+                <div class="nickname-box" onclick="toggleDropdown()">
+                    <span id="display-nickname" class="nickname-text">닉네임</span>
+                    <div class="exp-bar"></div>
+                </div>
+                <!-- 드롭다운 -->
+                <div id="profile-dropdown" class="hidden">
+                    <div class="dropdown-item text-white" onclick="changeName()">이름 변경</div>
+                    <div class="dropdown-item text-red" onclick="logout()">로그아웃</div>
+                </div>
+            </div>
+            
+            <div class="trophy-display">
+                <span>🏆</span> <span id="display-trophies">0</span>
+            </div>
+        </div>
+
+        <div class="home-character">👑</div>
+
+        <div class="bottom-bar">
+            <button id="battle-btn" class="btn btn-gold" onclick="startMatchmaking()">전투</button>
+        </div>
+    </div>
+
+    <!-- 3. 매칭 화면 (홈 화면 위에 오버레이) -->
+    <div id="matching-screen" class="hidden">
+        <div class="searching-text">상대 찾는 중...</div>
+        <button class="btn btn-red" onclick="cancelMatchmaking()">취소</button>
+    </div>
+
+    <!-- 4. 게임 화면 -->
+    <div id="game-screen" class="hidden">
+        <div id="arena" onclick="handleArenaClick(event)">
+            <div class="river"></div>
+            <div class="bridge left"></div>
+            <div class="bridge right"></div>
+
+            <!-- 적 타워 -->
+            <div class="tower enemy king-tower enemy-king" id="enemy-king">
+                <div class="hp-bar-container"><div class="hp-bar" style="width: 100%;"></div></div>
+                🤴
+            </div>
+            <div class="tower enemy princess-tower enemy-princess left" id="enemy-left">
+                <div class="hp-bar-container"><div class="hp-bar" style="width: 100%;"></div></div>
+                👸
+            </div>
+            <div class="tower enemy princess-tower enemy-princess right" id="enemy-right">
+                <div class="hp-bar-container"><div class="hp-bar" style="width: 100%;"></div></div>
+                👸
+            </div>
+
+            <!-- 아군 타워 -->
+            <div class="tower my king-tower my-king" id="my-king">
+                <div class="hp-bar-container"><div class="hp-bar" style="width: 100%;"></div></div>
+                🤴
+            </div>
+            <div class="tower my princess-tower my-princess left" id="my-left">
+                <div class="hp-bar-container"><div class="hp-bar" style="width: 100%;"></div></div>
+                👸
+            </div>
+            <div class="tower my princess-tower my-princess right" id="my-right">
+                <div class="hp-bar-container"><div class="hp-bar" style="width: 100%;"></div></div>
+                👸
+            </div>
+        </div>
+
+        <!-- 게임 UI -->
+        <div id="game-ui">
+            <div class="elixir-bar"><div class="elixir-fill" id="elixir-fill"></div></div>
+            <div class="elixir-count" id="elixir-count">5</div>
+            
+            <div class="next-card">
+                <div>다음</div>
+                <div class="next-card-icon" id="next-card-icon">❓</div>
+            </div>
+            <div class="hand" id="card-hand">
+                <!-- 카드는 JS로 생성 -->
+            </div>
+        </div>
+
+        <!-- 결과 모달 -->
+        <div id="result-modal">
+            <div class="result-title" id="result-text">VICTORY!</div>
+            <button class="btn btn-gold" onclick="returnToHome()">홈으로</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    // --- Firebase Initialization ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBS0Kr19gorGiYbJtqzvnMkPyxN77eAulA",
+      authDomain: "fruitslayer-online.firebaseapp.com",
+      projectId: "fruitslayer-online",
+      storageBucket: "fruitslayer-online.firebasestorage.app",
+      messagingSenderId: "396029026245",
+      appId: "1:396029026245:web:164f80bdc02cef437bf5ac"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+    // Global State
+    const STATE = {
+        user: {
+            nickname: null,
+            trophies: 0,
+            lastNameChange: 0
+        },
+        game: {
+            elixir: 5,
+            cards: [],
+            nextCard: null,
+            hand: [],
+            selectedCardIdx: -1,
+            entities: [],
+            towers: {},
+            running: false,
+            loopId: null
+        },
+        auth: {
+            uid: null,
+            isLoaded: false
+        }
+    };
+
+    // --- Auth Logic ---
+    const initAuth = async () => {
+        // 커스텀 토큰이 있는 경우에만 자동 로그인 시도 (환경 기본 제공)
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+             try {
+                 await signInWithCustomToken(auth, __initial_auth_token);
+             } catch (e) {
+                 console.warn("Custom token auth failed", e);
+             }
+        }
+        // 그 외에는 사용자 클릭을 기다림 (자동 익명 로그인 제거)
+    };
+
+    // Start Auth Listener
+    initAuth();
+
+    // Listen to Auth Changes
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            console.log("Logged in:", user.uid);
+            STATE.auth.uid = user.uid;
+            await checkUserProfile(user.uid);
+        } else {
+            console.log("Logged out");
+            STATE.auth.uid = null;
+            showScreen('login');
+            resetLoginUI();
+        }
+    });
+
+    // Firestore Integration
+    async function checkUserProfile(uid) {
+        document.getElementById('loading-msg').classList.remove('hidden');
+        document.getElementById('google-login-btn').classList.add('hidden');
+        document.getElementById('loading-msg').innerText = "프로필 불러오는 중...";
+        
+        try {
+            const userRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'userData');
+            const docSnap = await getDoc(userRef);
+
+            if (docSnap.exists()) {
+                STATE.user = docSnap.data();
+                // 데이터가 있으면 바로 홈 화면으로 이동
+                showScreen('home');
+                updateHomeUI();
+            } else {
+                // 데이터가 없으면 신규 유저 -> 닉네임 설정 필요
+                document.getElementById('loading-msg').classList.add('hidden');
+                // 여기서 버튼을 다시 보여주는 대신 바로 닉네임 입력을 받을 수도 있지만,
+                // UI 흐름상 버튼을 "시작하기"로 바꾸고 누르면 입력받게 함.
+                const btn = document.getElementById('google-login-btn');
+                btn.classList.remove('hidden');
+                document.getElementById('login-btn-text').innerText = "신규 계정 생성하기";
+            }
+        } catch (e) {
+            console.error("Data load error", e);
+            document.getElementById('loading-msg').innerText = "오류 발생 (새로고침 해주세요)";
+            const btn = document.getElementById('google-login-btn');
+            btn.classList.remove('hidden');
+        }
+    }
+
+    async function saveUserData() {
+        if (!STATE.auth.uid) return;
+        try {
+            const userRef = doc(db, 'artifacts', appId, 'users', STATE.auth.uid, 'profile', 'userData');
+            await setDoc(userRef, STATE.user);
+        } catch (e) {
+            console.error("Save failed", e);
+        }
+    }
+
+    // --- UI Logic Binding (Global Scope) ---
+    
+    window.handleLoginClick = async () => {
+        // 1. 이미 로그인 되어있고 닉네임이 없는 경우 (신규 유저 단계)
+        if (STATE.auth.uid && !STATE.user.nickname) {
+            let name = prompt("사용할 닉네임을 입력하세요:");
+            if (name && name.trim() !== "") {
+                STATE.user.nickname = name.trim();
+                STATE.user.trophies = 0;
+                STATE.user.lastNameChange = 0;
+                await saveUserData();
+                showScreen('home');
+                updateHomeUI();
+            }
+            return;
+        }
+
+        // 2. 이미 로그인 되어있고 데이터도 있는 경우 (홈으로)
+        if (STATE.auth.uid && STATE.user.nickname) {
+            showScreen('home');
+            updateHomeUI();
+            return;
+        }
+
+        // 3. 로그인이 안 된 경우 -> 구글 로그인 팝업 호출
+        try {
+            const provider = new GoogleAuthProvider();
+            await signInWithPopup(auth, provider);
+            // 성공하면 onAuthStateChanged가 트리거되어 checkUserProfile이 호출됨
+        } catch (error) {
+            console.error("Login Failed", error);
+            alert("로그인 실패: " + error.message);
+        }
+    };
+
+    window.toggleDropdown = () => {
+        const dd = document.getElementById('profile-dropdown');
+        dd.classList.toggle('hidden');
+    };
+
+    window.changeName = async () => {
+        const now = Date.now();
+        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+        
+        if (now - STATE.user.lastNameChange < thirtyDays) {
+            const daysLeft = Math.ceil((thirtyDays - (now - STATE.user.lastNameChange)) / (24 * 60 * 60 * 1000));
+            alert(`이름 변경은 30일에 한 번만 가능합니다.\n${daysLeft}일 후에 다시 시도하세요.`);
+            return;
+        }
+
+        const newName = prompt("새로운 닉네임을 입력하세요:");
+        if (newName && newName.trim() !== "") {
+            STATE.user.nickname = newName.trim();
+            STATE.user.lastNameChange = now;
+            await saveUserData();
+            updateHomeUI();
+            alert("닉네임이 변경되었습니다.");
+        }
+    };
+
+    window.logout = () => {
+        signOut(auth).then(() => {
+            showScreen('login');
+            resetLoginUI();
+        });
+    };
+
+    function resetLoginUI() {
+        const btn = document.getElementById('google-login-btn');
+        btn.classList.remove('hidden');
+        document.getElementById('login-btn-text').innerText = "구글 계정으로 로그인";
+        document.getElementById('loading-msg').classList.add('hidden');
+        STATE.user = { nickname: null, trophies: 0, lastNameChange: 0 };
+    }
+
+    // --- Game Logic ---
+    // (이전 코드와 동일, 생략 없음)
+
+    const CARD_DATA = [
+        { id: 'giant', name: '자이언트', icon: '👹', cost: 5, type: 'ground', target: 'building', speed: 1.5, hp: 1000, dmg: 50, range: 2 },
+        { id: 'pekkamini', name: '미니 페카', icon: '🤖', cost: 4, type: 'ground', target: 'all', speed: 3, hp: 600, dmg: 150, range: 2 },
+        { id: 'knight', name: '기사', icon: '⚔️', cost: 3, type: 'ground', target: 'all', speed: 2, hp: 800, dmg: 40, range: 2 },
+        { id: 'archers', name: '아처', icon: '🏹', cost: 3, type: 'ground', target: 'all', speed: 2, hp: 300, dmg: 30, range: 5, count: 2 },
+        { id: 'cannon', name: '대포', icon: '💣', cost: 3, type: 'building', target: 'ground', hp: 500, dmg: 40, range: 6, lifetime: 30 },
+        { id: 'baby_dragon', name: '베이비 드래곤', icon: '🐉', cost: 4, type: 'air', target: 'all', speed: 2.5, hp: 700, dmg: 40, range: 3 },
+        { id: 'fireball', name: '파이어 볼', icon: '🔥', cost: 4, type: 'spell', dmg: 200, radius: 3 },
+        { id: 'skeletons', name: '해골 병사', icon: '💀', cost: 1, type: 'ground', target: 'all', speed: 2.5, hp: 50, dmg: 20, range: 1, count: 3 }
+    ];
+
+    const TOWER_STATS = {
+        princess: { hp: 2534, dmg: 80, range: 7, speed: 0.8 },
+        king: { hp: 4008, dmg: 90, range: 7, speed: 1 }
+    };
+
+    const screens = {
+        login: document.getElementById('login-screen'),
+        home: document.getElementById('home-screen'),
+        matching: document.getElementById('matching-screen'),
+        game: document.getElementById('game-screen')
+    };
+
+    function showScreen(screenName) {
+        Object.values(screens).forEach(el => el.classList.add('hidden'));
+        screens[screenName].classList.remove('hidden');
+    }
+
+    function updateHomeUI() {
+        document.getElementById('display-nickname').innerText = STATE.user.nickname;
+        document.getElementById('display-trophies').innerText = STATE.user.trophies;
+        document.getElementById('profile-dropdown').classList.add('hidden');
+    }
+
+    // --- Matching ---
+    let matchingTimeout;
+    window.startMatchmaking = () => {
+        document.getElementById('matching-screen').classList.remove('hidden');
+        const delay = Math.random() * 2000 + 2000;
+        matchingTimeout = setTimeout(() => {
+            startGame();
+        }, delay);
+    };
+
+    window.cancelMatchmaking = () => {
+        clearTimeout(matchingTimeout);
+        document.getElementById('matching-screen').classList.add('hidden');
+    };
+
+    // --- Game Loop & Logic ---
+    
+    function startGame() {
+        showScreen('game');
+        document.getElementById('matching-screen').classList.add('hidden');
+        document.getElementById('result-modal').style.display = 'none';
+
+        STATE.game.elixir = 5;
+        STATE.game.entities = [];
+        STATE.game.running = true;
+        
+        let deck = [...CARD_DATA];
+        deck.sort(() => Math.random() - 0.5);
+        
+        STATE.game.hand = deck.slice(0, 4);
+        STATE.game.nextCard = deck[4];
+        STATE.game.cards = deck;
+
+        STATE.game.towers = {
+            'my-king': { hp: TOWER_STATS.king.hp, max: TOWER_STATS.king.hp, el: document.getElementById('my-king'), team: 'my' },
+            'my-left': { hp: TOWER_STATS.princess.hp, max: TOWER_STATS.princess.hp, el: document.getElementById('my-left'), team: 'my' },
+            'my-right': { hp: TOWER_STATS.princess.hp, max: TOWER_STATS.princess.hp, el: document.getElementById('my-right'), team: 'my' },
+            'enemy-king': { hp: TOWER_STATS.king.hp, max: TOWER_STATS.king.hp, el: document.getElementById('enemy-king'), team: 'enemy' },
+            'enemy-left': { hp: TOWER_STATS.princess.hp, max: TOWER_STATS.princess.hp, el: document.getElementById('enemy-left'), team: 'enemy' },
+            'enemy-right': { hp: TOWER_STATS.princess.hp, max: TOWER_STATS.princess.hp, el: document.getElementById('enemy-right'), team: 'enemy' }
+        };
+
+        for(let key in STATE.game.towers) {
+            updateTowerHP(key);
+            STATE.game.towers[key].el.style.opacity = '1';
+        }
+
+        document.querySelectorAll('.unit').forEach(e => e.remove());
+        document.querySelectorAll('.projectile').forEach(e => e.remove());
+
+        renderHand();
+        startGameLoop();
+    }
+
+    function updateTowerHP(id) {
+        const t = STATE.game.towers[id];
+        if (t.hp <= 0) t.hp = 0;
+        const pct = (t.hp / t.max) * 100;
+        t.el.querySelector('.hp-bar').style.width = `${pct}%`;
+        if (t.hp <= 0) t.el.style.opacity = '0.2';
+    }
+
+    function renderHand() {
+        const handEl = document.getElementById('card-hand');
+        handEl.innerHTML = '';
+        
+        STATE.game.hand.forEach((card, idx) => {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'card';
+            if (STATE.game.elixir < card.cost) cardEl.classList.add('disabled');
+            if (STATE.game.selectedCardIdx === idx) cardEl.classList.add('selected');
+            
+            cardEl.innerHTML = `
+                <div class="card-cost">${card.cost}</div>
+                <div class="card-img">${card.icon}</div>
+                <div style="font-size:0.6rem; text-align:center;">${card.name}</div>
+            `;
+            
+            cardEl.onclick = () => selectCard(idx);
+            handEl.appendChild(cardEl);
+        });
+
+        const nextEl = document.getElementById('next-card-icon');
+        nextEl.innerText = STATE.game.nextCard.icon;
+        
+        updateElixirUI();
+    }
+
+    function selectCard(idx) {
+        const card = STATE.game.hand[idx];
+        if (STATE.game.elixir < card.cost) return;
+
+        if (STATE.game.selectedCardIdx === idx) {
+            STATE.game.selectedCardIdx = -1;
+        } else {
+            STATE.game.selectedCardIdx = idx;
+        }
+        renderHand();
+    }
+
+    window.handleArenaClick = (e) => {
+        if (STATE.game.selectedCardIdx === -1) return;
+        
+        const rect = document.getElementById('arena').getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        if (y < rect.height / 2 && STATE.game.hand[STATE.game.selectedCardIdx].type !== 'spell') {
+            return; 
+        }
+
+        spawnUnit(STATE.game.hand[STATE.game.selectedCardIdx], x, y, 'my');
+        
+        const usedCardCost = STATE.game.hand[STATE.game.selectedCardIdx].cost;
+        STATE.game.elixir -= usedCardCost;
+        
+        const usedCard = STATE.game.hand[STATE.game.selectedCardIdx];
+        STATE.game.hand[STATE.game.selectedCardIdx] = STATE.game.nextCard;
+        STATE.game.nextCard = usedCard; 
+        
+        STATE.game.selectedCardIdx = -1;
+        renderHand();
+    };
+
+    function spawnUnit(cardData, x, y, team) {
+        const unitEl = document.createElement('div');
+        unitEl.className = `unit ${team}`;
+        unitEl.innerText = cardData.icon;
+        unitEl.style.left = x + 'px';
+        unitEl.style.top = y + 'px';
+        unitEl.innerHTML += `<div class="unit-hp"><div class="unit-hp-fill"></div></div>`;
+        document.getElementById('arena').appendChild(unitEl);
+
+        const entity = {
+            el: unitEl,
+            x: x,
+            y: y,
+            data: cardData,
+            hp: cardData.hp || 1,
+            maxHp: cardData.hp || 1,
+            team: team,
+            lastAttack: 0,
+            dead: false
+        };
+
+        if (cardData.type === 'spell') {
+            setTimeout(() => {
+                applySpellDamage(entity);
+                unitEl.remove();
+            }, 500);
+        } else {
+            STATE.game.entities.push(entity);
+        }
+    }
+
+    function applySpellDamage(spellEntity) {
+        let target = findNearestTarget(spellEntity, spellEntity.team === 'my' ? 'enemy' : 'my');
+        if (target && target.dist < 100) {
+             takeDamage(target.obj, spellEntity.data.dmg);
+        }
+    }
+
+    function startGameLoop() {
+        if (STATE.game.loopId) clearInterval(STATE.game.loopId);
+        
+        let lastTime = Date.now();
+        let elixirTimer = 0;
+        let aiTimer = 0;
+
+        STATE.game.loopId = setInterval(() => {
+            if (!STATE.game.running) return;
+
+            const now = Date.now();
+            const dt = (now - lastTime) / 1000;
+            lastTime = now;
+
+            elixirTimer += dt;
+            if (elixirTimer >= 2.8) {
+                if (STATE.game.elixir < 10) {
+                    STATE.game.elixir++;
+                    renderHand();
+                }
+                elixirTimer = 0;
+            }
+            updateElixirUI(elixirTimer / 2.8);
+
+            aiTimer += dt;
+            if (aiTimer > 5) {
+                spawnEnemyAI();
+                aiTimer = 0;
+            }
+
+            updateEntities(now);
+            checkWinCondition();
+
+        }, 50);
+    }
+
+    function updateElixirUI(progress = 0) {
+        const fullWidth = STATE.game.elixir * 10 + (progress * 10);
+        document.getElementById('elixir-fill').style.width = `${Math.min(fullWidth, 100)}%`;
+        document.getElementById('elixir-count').innerText = STATE.game.elixir;
+    }
+
+    function spawnEnemyAI() {
+        const randomCard = CARD_DATA[Math.floor(Math.random() * CARD_DATA.length)];
+        const rect = document.getElementById('arena').getBoundingClientRect();
+        const x = Math.random() * (rect.width - 40) + 20;
+        const y = Math.random() * (rect.height * 0.3) + 20;
+
+        if (randomCard.type !== 'spell') {
+            spawnUnit(randomCard, x, y, 'enemy');
+        }
+    }
+
+    function updateEntities(now) {
+        STATE.game.entities.forEach(ent => {
+            if (ent.dead) return;
+
+            const targetTeam = ent.team === 'my' ? 'enemy' : 'my';
+            const target = findNearestTarget(ent, targetTeam);
+
+            if (target) {
+                const rangePx = ent.data.range * 20;
+
+                if (target.dist <= rangePx) {
+                    if (now - ent.lastAttack > 1000) {
+                        createProjectile(ent, target.obj);
+                        takeDamage(target.obj, ent.data.dmg);
+                        ent.lastAttack = now;
+                    }
+                } else {
+                    const dx = target.x - ent.x;
+                    const dy = target.y - ent.y;
+                    const angle = Math.atan2(dy, dx);
+                    const speed = ent.data.speed * 2;
+
+                    ent.x += Math.cos(angle) * speed;
+                    ent.y += Math.sin(angle) * speed;
+                    
+                    ent.el.style.left = ent.x + 'px';
+                    ent.el.style.top = ent.y + 'px';
+                }
+            }
+        });
+
+        STATE.game.entities = STATE.game.entities.filter(e => !e.dead);
+    }
+
+    function findNearestTarget(me, targetTeam) {
+        let nearest = null;
+        let minDist = Infinity;
+
+        if (me.data.target === 'all') {
+            STATE.game.entities.forEach(other => {
+                if (other.team === targetTeam && !other.dead) {
+                    const d = Math.hypot(me.x - other.x, me.y - other.y);
+                    if (d < minDist) {
+                        minDist = d;
+                        nearest = { obj: other, x: other.x, y: other.y, type: 'unit', dist: d };
+                    }
+                }
+            });
+        }
+
+        for (let key in STATE.game.towers) {
+            const tower = STATE.game.towers[key];
+            if (tower.team === targetTeam && tower.hp > 0) {
+                const tRect = tower.el.getBoundingClientRect();
+                const aRect = document.getElementById('arena').getBoundingClientRect();
+                const tx = tRect.left - aRect.left + tRect.width/2;
+                const ty = tRect.top - aRect.top + tRect.height/2;
+
+                const d = Math.hypot(me.x - tx, me.y - ty);
+                if (d < minDist) {
+                    minDist = d;
+                    nearest = { obj: tower, x: tx, y: ty, type: 'tower', dist: d };
+                }
+            }
+        }
+        return nearest;
+    }
+
+    function takeDamage(obj, dmg) {
+        obj.hp -= dmg;
+        if (obj.el.classList.contains('tower')) {
+            for(let key in STATE.game.towers) {
+                if(STATE.game.towers[key] === obj) {
+                    updateTowerHP(key);
+                    break;
+                }
+            }
+        } else {
+            const pct = (obj.hp / obj.maxHp) * 100;
+            obj.el.querySelector('.unit-hp-fill').style.width = `${pct}%`;
+            if (obj.hp <= 0) {
+                obj.dead = true;
+                obj.el.remove();
+            }
+        }
+    }
+
+    function createProjectile(from, toObj) {
+        let tx, ty;
+        if (toObj.el.classList.contains('tower')) {
+            const tRect = toObj.el.getBoundingClientRect();
+            const aRect = document.getElementById('arena').getBoundingClientRect();
+            tx = tRect.left - aRect.left + tRect.width/2;
+            ty = tRect.top - aRect.top + tRect.height/2;
+        } else {
+            tx = toObj.x;
+            ty = toObj.y;
+        }
+
+        const p = document.createElement('div');
+        p.className = 'projectile';
+        p.style.left = from.x + 'px';
+        p.style.top = from.y + 'px';
+        document.getElementById('arena').appendChild(p);
+
+        p.animate([
+            { left: from.x + 'px', top: from.y + 'px' },
+            { left: tx + 'px', top: ty + 'px' }
+        ], {
+            duration: 200,
+            easing: 'linear'
+        }).onfinish = () => p.remove();
+    }
+
+    function checkWinCondition() {
+        if (STATE.game.towers['enemy-king'].hp <= 0) {
+            endGame(true);
+        } else if (STATE.game.towers['my-king'].hp <= 0) {
+            endGame(false);
+        }
+    }
+
+    function endGame(win) {
+        STATE.game.running = false;
+        clearInterval(STATE.game.loopId);
+        
+        const modal = document.getElementById('result-modal');
+        const text = document.getElementById('result-text');
+        modal.style.display = 'flex';
+        
+        if (win) {
+            text.innerText = "VICTORY!";
+            text.style.color = "gold";
+            STATE.user.trophies += 30;
+        } else {
+            text.innerText = "DEFEAT";
+            text.style.color = "#e74c3c";
+            STATE.user.trophies = Math.max(0, STATE.user.trophies - 20);
+        }
+        // 저장
+        saveUserData();
+    }
+
+    window.returnToHome = () => {
+        showScreen('home');
+        updateHomeUI();
+    };
+
+    // --- Button Listener ---
+    document.getElementById('google-login-btn').addEventListener('click', window.handleLoginClick);
+
+</script>
+
+</body>
+</html>
