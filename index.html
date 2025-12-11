@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clash Royale Web</title>
+    <title>Clash Royale Web - PvP</title>
     <style>
         /* --- 기본 설정 및 폰트 --- */
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
@@ -14,6 +14,8 @@
             --text-stroke: #000;
             --bg-dark: #1c2b45;
             --arena-grass: #4c9635;
+            --hp-green: #68cc1e;
+            --hp-red: #d11e1e;
         }
 
         * {
@@ -39,7 +41,7 @@
         #app-container {
             width: 100%;
             height: 100%;
-            max-width: 500px; /* 모바일 비율 유지 */
+            max-width: 500px;
             background-color: var(--bg-dark);
             position: relative;
             overflow: hidden;
@@ -65,13 +67,15 @@
             box-shadow: 0 0 0 #000;
         }
         .btn-gold {
-            background-color: var(--primary-gold);
+            background: linear-gradient(to bottom, #ffea00, #ffbb00);
             color: #4a2c0f;
             text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+            border-color: #8c6400;
         }
         .btn-red {
             background-color: #e74c3c;
             color: white;
+            border-color: #922b21;
         }
         .btn-google {
             background-color: white;
@@ -81,6 +85,7 @@
             justify-content: center;
             gap: 10px;
             font-size: 1rem;
+            border-color: #ccc;
         }
 
         /* --- 1. 로그인 화면 --- */
@@ -97,8 +102,10 @@
             font-size: 3rem;
             font-weight: 900;
             color: var(--primary-gold);
-            text-shadow: 3px 3px 0 #000;
+            text-shadow: 3px 3px 0 #000, 0 0 20px rgba(255, 215, 0, 0.5);
             margin-bottom: 50px;
+            text-align: center;
+            line-height: 1.2;
         }
         #loading-msg {
             margin-top: 20px;
@@ -120,6 +127,7 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
+            z-index: 10;
         }
 
         .profile-container {
@@ -194,7 +202,9 @@
             transform: translate(-50%, -60%);
             font-size: 8rem;
             filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+            animation: float 3s ease-in-out infinite;
         }
+        @keyframes float { 0%, 100% { transform: translate(-50%, -60%); } 50% { transform: translate(-50%, -65%); } }
 
         /* 하단 전투 버튼 */
         .bottom-bar {
@@ -205,9 +215,6 @@
             justify-content: center;
         }
         #battle-btn {
-            background: linear-gradient(to bottom, #ffcc00, #ffaa00);
-            border: 3px solid #fff;
-            box-shadow: 0 5px 0 #cc8800, 0 8px 10px rgba(0,0,0,0.5);
             font-size: 1.5rem;
             padding: 15px 50px;
             border-radius: 30px;
@@ -249,11 +256,15 @@
         #arena {
             flex: 1;
             position: relative;
+            /* 체크무늬 잔디 패턴 */
             background-image: 
-                linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px);
+                linear-gradient(45deg, #448930 25%, transparent 25%, transparent 75%, #448930 75%, #448930),
+                linear-gradient(45deg, #448930 25%, transparent 25%, transparent 75%, #448930 75%, #448930);
+            background-position: 0 0, 20px 20px;
             background-size: 40px 40px;
+            background-color: #4c9635;
             overflow: hidden;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
         }
 
         /* 강 */
@@ -265,22 +276,26 @@
             height: 40px;
             background: #4a90e2;
             transform: translateY(-50%);
-            border-top: 2px solid #5d4037;
-            border-bottom: 2px solid #5d4037;
+            border-top: 3px solid #8e6e22;
+            border-bottom: 3px solid #8e6e22;
             z-index: 1;
+            background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 10 Q5 5 10 10 T20 10' stroke='rgba(255,255,255,0.3)' fill='none'/%3E%3C/svg%3E");
+            animation: flow 2s linear infinite;
         }
+        @keyframes flow { from { background-position: 0 0; } to { background-position: 20px 0; } }
 
         /* 다리 */
         .bridge {
             position: absolute;
-            width: 40px;
+            width: 50px;
             height: 60px;
-            background: #8d6e63;
+            background: url("data:image/svg+xml,%3Csvg width='10' height='10' viewBox='0 0 10 10' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='10' height='2' fill='%233e2723'/%3E%3C/svg%3E") #8d6e63;
             top: 50%;
             transform: translateY(-50%);
             z-index: 2;
-            border-left: 2px solid #3e2723;
-            border-right: 2px solid #3e2723;
+            border-left: 3px solid #3e2723;
+            border-right: 3px solid #3e2723;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.3);
         }
         .bridge.left { left: 20%; }
         .bridge.right { right: 20%; }
@@ -295,16 +310,45 @@
             align-items: center;
             z-index: 5;
             font-size: 2rem;
+            /* 타워 바닥자국 */
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.6));
         }
+        
+        /* 타워 HP 바 개선 */
         .hp-bar-container {
             width: 60px;
-            height: 6px;
-            background: #333;
-            margin-bottom: 2px;
-            border: 1px solid #000;
+            height: 14px;
+            background: #222;
+            margin-bottom: 5px;
+            border: 2px solid #000;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .hp-bar { height: 100%; background: #2ecc71; width: 100%; transition: width 0.2s; }
-        .tower.enemy .hp-bar { background: #e74c3c; }
+        .hp-bar { 
+            height: 100%; 
+            background: linear-gradient(to bottom, #7ce82b, #4cae0b); 
+            width: 100%; 
+            transition: width 0.2s; 
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 1;
+        }
+        .tower.enemy .hp-bar { 
+            background: linear-gradient(to bottom, #ff5e5e, #c0392b); 
+        }
+        .hp-text {
+            position: relative;
+            z-index: 2;
+            font-size: 0.6rem;
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 0 #000;
+        }
 
         /* 타워 위치 */
         .king-tower { left: 50%; transform: translateX(-50%); width: 70px; height: 70px; font-size: 3rem;}
@@ -333,25 +377,28 @@
             transition: top 0.1s linear, left 0.1s linear;
             z-index: 10;
         }
-        .unit.enemy { filter: hue-rotate(180deg); } /* 적군은 색상 반전 효과 */
+        .unit.enemy { filter: hue-rotate(180deg) brightness(0.9); }
         .unit-hp {
             position: absolute;
-            top: -5px;
+            top: -8px;
             width: 30px;
-            height: 4px;
-            background: red;
+            height: 5px;
+            background: #333;
+            border: 1px solid black;
         }
-        .unit-hp-fill { background: lime; height: 100%; width: 100%; }
+        .unit-hp-fill { background: #4cae0b; height: 100%; width: 100%; }
+        .unit.enemy .unit-hp-fill { background: #e74c3c; }
 
         /* 투사체 */
         .projectile {
             position: absolute;
-            width: 10px;
-            height: 10px;
-            background: orange;
+            width: 12px;
+            height: 12px;
+            background: radial-gradient(circle, #ffaa00, #ff5500);
             border-radius: 50%;
             z-index: 20;
             pointer-events: none;
+            box-shadow: 0 0 5px #ffaa00;
         }
 
         /* 하단 카드 덱 UI */
@@ -363,6 +410,7 @@
             align-items: center;
             padding: 0 10px;
             position: relative;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
         }
 
         .elixir-bar {
@@ -371,22 +419,24 @@
             left: 0;
             width: 100%;
             height: 15px;
-            background: #333;
+            background: #222;
+            border-top: 2px solid #000;
         }
         .elixir-fill {
             height: 100%;
-            background: #d000ff;
+            background: linear-gradient(to bottom, #d55eff, #a800e0);
             width: 0%;
-            transition: width 0.5s linear;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 10px #d000ff;
         }
         .elixir-count {
             position: absolute;
-            top: -30px;
+            top: -40px;
             right: 10px;
             color: #d000ff;
             font-weight: 900;
-            font-size: 1.5rem;
-            text-shadow: 1px 1px 0 #000;
+            font-size: 2rem;
+            text-shadow: 2px 2px 0 #000;
         }
 
         .next-card {
@@ -401,6 +451,7 @@
             justify-content: center;
             font-size: 0.7rem;
             color: #aaa;
+            border: 2px solid #111;
         }
         .next-card-icon { font-size: 1.5rem; }
 
@@ -414,57 +465,61 @@
         .card {
             width: 70px;
             height: 90px;
-            background: #fff;
-            border: 2px solid #888;
-            border-radius: 5px;
+            background: linear-gradient(135deg, #fff, #ddd);
+            border: 2px solid #555;
+            border-radius: 8px;
             position: relative;
             cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 2px;
-            transition: transform 0.1s;
+            transition: transform 0.1s, border-color 0.1s;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.5);
         }
         .card.selected {
-            border: 3px solid var(--primary-gold);
-            transform: translateY(-10px);
+            border: 4px solid var(--primary-gold);
+            transform: translateY(-15px) scale(1.05);
+            box-shadow: 0 0 15px var(--primary-gold);
+            z-index: 20;
         }
         .card.disabled {
-            filter: grayscale(1);
-            opacity: 0.6;
+            filter: grayscale(1) brightness(0.6);
             cursor: not-allowed;
         }
         .card-img { font-size: 2.5rem; margin-top: 5px; }
         .card-cost {
             position: absolute;
-            top: -5px;
-            left: -5px;
+            top: -8px;
+            left: -8px;
             background: #d000ff;
             color: white;
-            border: 1px solid #000;
+            border: 2px solid #000;
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             display: flex;
             justify-content: center;
             align-items: center;
             font-weight: bold;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 3px rgba(0,0,0,0.5);
         }
 
         /* 결과 모달 */
         #result-modal {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 100;
             display: none;
+            backdrop-filter: blur(5px);
         }
-        .result-title { font-size: 3rem; font-weight: 900; color: gold; margin-bottom: 20px; }
+        .result-title { font-size: 3rem; font-weight: 900; color: gold; margin-bottom: 20px; text-shadow: 0 0 20px rgba(255,215,0,0.8); }
         
     </style>
 </head>
@@ -473,8 +528,8 @@
 <div id="app-container">
     <!-- 1. 로그인 화면 -->
     <div id="login-screen">
-        <div class="logo">CLASH ROYALE</div>
-        <!-- 버튼 초기 상태는 활성화 (로딩 텍스트 제거) -->
+        <div class="logo">CLASH<br>ROYALE</div>
+        <!-- Google Login Button -->
         <button id="google-login-btn" class="btn btn-google">
             <span style="font-weight:bold; color:#4285F4">G</span> <span id="login-btn-text">구글 계정으로 로그인</span>
         </button>
@@ -504,13 +559,13 @@
         <div class="home-character">👑</div>
 
         <div class="bottom-bar">
-            <button id="battle-btn" class="btn btn-gold" onclick="startMatchmaking()">전투</button>
+            <button id="battle-btn" class="btn btn-gold" onclick="startPvPMatchmaking()">전투 (PvP)</button>
         </div>
     </div>
 
     <!-- 3. 매칭 화면 (홈 화면 위에 오버레이) -->
     <div id="matching-screen" class="hidden">
-        <div class="searching-text">상대 찾는 중...</div>
+        <div class="searching-text">대전 상대 찾는 중...</div>
         <button class="btn btn-red" onclick="cancelMatchmaking()">취소</button>
     </div>
 
@@ -523,29 +578,47 @@
 
             <!-- 적 타워 -->
             <div class="tower enemy king-tower enemy-king" id="enemy-king">
-                <div class="hp-bar-container"><div class="hp-bar" style="width: 100%;"></div></div>
+                <div class="hp-bar-container">
+                    <div class="hp-bar" style="width: 100%;"></div>
+                    <span class="hp-text">4008</span>
+                </div>
                 🤴
             </div>
             <div class="tower enemy princess-tower enemy-princess left" id="enemy-left">
-                <div class="hp-bar-container"><div class="hp-bar" style="width: 100%;"></div></div>
+                <div class="hp-bar-container">
+                    <div class="hp-bar" style="width: 100%;"></div>
+                    <span class="hp-text">2534</span>
+                </div>
                 👸
             </div>
             <div class="tower enemy princess-tower enemy-princess right" id="enemy-right">
-                <div class="hp-bar-container"><div class="hp-bar" style="width: 100%;"></div></div>
+                <div class="hp-bar-container">
+                    <div class="hp-bar" style="width: 100%;"></div>
+                    <span class="hp-text">2534</span>
+                </div>
                 👸
             </div>
 
             <!-- 아군 타워 -->
             <div class="tower my king-tower my-king" id="my-king">
-                <div class="hp-bar-container"><div class="hp-bar" style="width: 100%;"></div></div>
+                <div class="hp-bar-container">
+                    <div class="hp-bar" style="width: 100%;"></div>
+                    <span class="hp-text">4008</span>
+                </div>
                 🤴
             </div>
             <div class="tower my princess-tower my-princess left" id="my-left">
-                <div class="hp-bar-container"><div class="hp-bar" style="width: 100%;"></div></div>
+                <div class="hp-bar-container">
+                    <div class="hp-bar" style="width: 100%;"></div>
+                    <span class="hp-text">2534</span>
+                </div>
                 👸
             </div>
             <div class="tower my princess-tower my-princess right" id="my-right">
-                <div class="hp-bar-container"><div class="hp-bar" style="width: 100%;"></div></div>
+                <div class="hp-bar-container">
+                    <div class="hp-bar" style="width: 100%;"></div>
+                    <span class="hp-text">2534</span>
+                </div>
                 👸
             </div>
         </div>
@@ -576,7 +649,7 @@
     // --- Firebase Initialization ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, onSnapshot, query, where, updateDoc, serverTimestamp, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBS0Kr19gorGiYbJtqzvnMkPyxN77eAulA",
@@ -600,6 +673,8 @@
             lastNameChange: 0
         },
         game: {
+            id: null,
+            role: null, // 'host' or 'guest'
             elixir: 5,
             cards: [],
             nextCard: null,
@@ -608,7 +683,8 @@
             entities: [],
             towers: {},
             running: false,
-            loopId: null
+            loopId: null,
+            unsubscribeMoves: null
         },
         auth: {
             uid: null,
@@ -618,39 +694,30 @@
 
     // --- Auth Logic ---
     const initAuth = async () => {
-        // 커스텀 토큰이 있는 경우에만 자동 로그인 시도 (환경 기본 제공)
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
              try {
                  await signInWithCustomToken(auth, __initial_auth_token);
-             } catch (e) {
-                 console.warn("Custom token auth failed", e);
-             }
+             } catch (e) { console.warn("Custom token auth failed", e); }
         }
-        // 그 외에는 사용자 클릭을 기다림 (자동 익명 로그인 제거)
     };
-
-    // Start Auth Listener
     initAuth();
 
-    // Listen to Auth Changes
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            console.log("Logged in:", user.uid);
             STATE.auth.uid = user.uid;
             await checkUserProfile(user.uid);
         } else {
-            console.log("Logged out");
             STATE.auth.uid = null;
             showScreen('login');
             resetLoginUI();
         }
     });
 
-    // Firestore Integration
+    // Firestore Profile Check
     async function checkUserProfile(uid) {
         document.getElementById('loading-msg').classList.remove('hidden');
         document.getElementById('google-login-btn').classList.add('hidden');
-        document.getElementById('loading-msg').innerText = "프로필 불러오는 중...";
+        document.getElementById('loading-msg').innerText = "프로필 확인 중...";
         
         try {
             const userRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'userData');
@@ -658,23 +725,18 @@
 
             if (docSnap.exists()) {
                 STATE.user = docSnap.data();
-                // 데이터가 있으면 바로 홈 화면으로 이동
                 showScreen('home');
                 updateHomeUI();
             } else {
-                // 데이터가 없으면 신규 유저 -> 닉네임 설정 필요
                 document.getElementById('loading-msg').classList.add('hidden');
-                // 여기서 버튼을 다시 보여주는 대신 바로 닉네임 입력을 받을 수도 있지만,
-                // UI 흐름상 버튼을 "시작하기"로 바꾸고 누르면 입력받게 함.
                 const btn = document.getElementById('google-login-btn');
                 btn.classList.remove('hidden');
                 document.getElementById('login-btn-text').innerText = "신규 계정 생성하기";
             }
         } catch (e) {
             console.error("Data load error", e);
-            document.getElementById('loading-msg').innerText = "오류 발생 (새로고침 해주세요)";
-            const btn = document.getElementById('google-login-btn');
-            btn.classList.remove('hidden');
+            document.getElementById('loading-msg').innerText = "오류 발생 (새로고침)";
+            document.getElementById('google-login-btn').classList.remove('hidden');
         }
     }
 
@@ -683,18 +745,14 @@
         try {
             const userRef = doc(db, 'artifacts', appId, 'users', STATE.auth.uid, 'profile', 'userData');
             await setDoc(userRef, STATE.user);
-        } catch (e) {
-            console.error("Save failed", e);
-        }
+        } catch (e) { console.error("Save failed", e); }
     }
 
-    // --- UI Logic Binding (Global Scope) ---
-    
+    // --- UI Listeners ---
     window.handleLoginClick = async () => {
-        // 1. 이미 로그인 되어있고 닉네임이 없는 경우 (신규 유저 단계)
         if (STATE.auth.uid && !STATE.user.nickname) {
             let name = prompt("사용할 닉네임을 입력하세요:");
-            if (name && name.trim() !== "") {
+            if (name && name.trim()) {
                 STATE.user.nickname = name.trim();
                 STATE.user.trophies = 0;
                 STATE.user.lastNameChange = 0;
@@ -704,68 +762,104 @@
             }
             return;
         }
-
-        // 2. 이미 로그인 되어있고 데이터도 있는 경우 (홈으로)
         if (STATE.auth.uid && STATE.user.nickname) {
             showScreen('home');
             updateHomeUI();
             return;
         }
 
-        // 3. 로그인이 안 된 경우 -> 구글 로그인 팝업 호출
         try {
             const provider = new GoogleAuthProvider();
             await signInWithPopup(auth, provider);
-            // 성공하면 onAuthStateChanged가 트리거되어 checkUserProfile이 호출됨
         } catch (error) {
-            console.error("Login Failed", error);
             alert("로그인 실패: " + error.message);
         }
     };
 
-    window.toggleDropdown = () => {
-        const dd = document.getElementById('profile-dropdown');
-        dd.classList.toggle('hidden');
-    };
-
-    window.changeName = async () => {
-        const now = Date.now();
-        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-        
-        if (now - STATE.user.lastNameChange < thirtyDays) {
-            const daysLeft = Math.ceil((thirtyDays - (now - STATE.user.lastNameChange)) / (24 * 60 * 60 * 1000));
-            alert(`이름 변경은 30일에 한 번만 가능합니다.\n${daysLeft}일 후에 다시 시도하세요.`);
-            return;
-        }
-
-        const newName = prompt("새로운 닉네임을 입력하세요:");
-        if (newName && newName.trim() !== "") {
-            STATE.user.nickname = newName.trim();
-            STATE.user.lastNameChange = now;
-            await saveUserData();
-            updateHomeUI();
-            alert("닉네임이 변경되었습니다.");
-        }
-    };
-
-    window.logout = () => {
-        signOut(auth).then(() => {
-            showScreen('login');
-            resetLoginUI();
-        });
-    };
+    window.toggleDropdown = () => document.getElementById('profile-dropdown').classList.toggle('hidden');
+    window.logout = () => signOut(auth);
 
     function resetLoginUI() {
-        const btn = document.getElementById('google-login-btn');
-        btn.classList.remove('hidden');
+        document.getElementById('google-login-btn').classList.remove('hidden');
         document.getElementById('login-btn-text').innerText = "구글 계정으로 로그인";
         document.getElementById('loading-msg').classList.add('hidden');
-        STATE.user = { nickname: null, trophies: 0, lastNameChange: 0 };
     }
 
-    // --- Game Logic ---
-    // (이전 코드와 동일, 생략 없음)
+    // --- PvP Matchmaking Logic ---
+    let matchmakingListener = null;
 
+    window.startPvPMatchmaking = async () => {
+        document.getElementById('matching-screen').classList.remove('hidden');
+        
+        // 1. 대기 중인 게임 찾기
+        const gamesRef = collection(db, 'artifacts', appId, 'public', 'data', 'games');
+        const q = query(gamesRef, where("status", "==", "waiting")); // Simple query Rule 2
+        
+        try {
+            const querySnapshot = await getDocs(q);
+            let joined = false;
+
+            // 이미 대기 중인 방이 있으면 참가
+            for (const docSnap of querySnapshot.docs) {
+                const gameData = docSnap.data();
+                // 내가 만든 방이 아니어야 함 (혹시 모를 중복 방지)
+                if (gameData.player1.uid !== STATE.auth.uid) {
+                    await updateDoc(doc(gamesRef, docSnap.id), {
+                        player2: { uid: STATE.auth.uid, nickname: STATE.user.nickname },
+                        status: 'playing',
+                        startTime: serverTimestamp()
+                    });
+                    STATE.game.id = docSnap.id;
+                    STATE.game.role = 'guest';
+                    startGame(false); // Guest start
+                    joined = true;
+                    break;
+                }
+            }
+
+            if (!joined) {
+                // 방 생성 (Host)
+                const docRef = await addDoc(gamesRef, {
+                    player1: { uid: STATE.auth.uid, nickname: STATE.user.nickname },
+                    status: 'waiting',
+                    createdAt: serverTimestamp()
+                });
+                STATE.game.id = docRef.id;
+                STATE.game.role = 'host';
+                
+                // 내 방에 누가 들어오는지 감시
+                matchmakingListener = onSnapshot(doc(gamesRef, docRef.id), (snap) => {
+                    const data = snap.data();
+                    if (data && data.status === 'playing') {
+                        // 상대방 입장!
+                        if (matchmakingListener) matchmakingListener(); // 리스너 해제
+                        startGame(true); // Host start
+                    }
+                });
+            }
+
+        } catch (e) {
+            console.error("Matchmaking error", e);
+            alert("매칭 중 오류 발생");
+            window.cancelMatchmaking();
+        }
+    };
+
+    window.cancelMatchmaking = async () => {
+        if (matchmakingListener) matchmakingListener();
+        
+        // 내가 만든 대기 방이 있다면 삭제
+        if (STATE.game.role === 'host' && STATE.game.id) {
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'games', STATE.game.id));
+            } catch(e) {}
+        }
+        
+        document.getElementById('matching-screen').classList.add('hidden');
+        STATE.game.id = null;
+    };
+
+    // --- Game Logic ---
     const CARD_DATA = [
         { id: 'giant', name: '자이언트', icon: '👹', cost: 5, type: 'ground', target: 'building', speed: 1.5, hp: 1000, dmg: 50, range: 2 },
         { id: 'pekkamini', name: '미니 페카', icon: '🤖', cost: 4, type: 'ground', target: 'all', speed: 3, hp: 600, dmg: 150, range: 2 },
@@ -776,22 +870,18 @@
         { id: 'fireball', name: '파이어 볼', icon: '🔥', cost: 4, type: 'spell', dmg: 200, radius: 3 },
         { id: 'skeletons', name: '해골 병사', icon: '💀', cost: 1, type: 'ground', target: 'all', speed: 2.5, hp: 50, dmg: 20, range: 1, count: 3 }
     ];
-
+    
+    // 타워 스탯
     const TOWER_STATS = {
         princess: { hp: 2534, dmg: 80, range: 7, speed: 0.8 },
         king: { hp: 4008, dmg: 90, range: 7, speed: 1 }
     };
 
-    const screens = {
-        login: document.getElementById('login-screen'),
-        home: document.getElementById('home-screen'),
-        matching: document.getElementById('matching-screen'),
-        game: document.getElementById('game-screen')
-    };
-
-    function showScreen(screenName) {
-        Object.values(screens).forEach(el => el.classList.add('hidden'));
-        screens[screenName].classList.remove('hidden');
+    function showScreen(name) {
+        ['login-screen', 'home-screen', 'matching-screen', 'game-screen'].forEach(id => {
+            document.getElementById(id).classList.add('hidden');
+        });
+        document.getElementById(name + '-screen').classList.remove('hidden');
     }
 
     function updateHomeUI() {
@@ -800,146 +890,163 @@
         document.getElementById('profile-dropdown').classList.add('hidden');
     }
 
-    // --- Matching ---
-    let matchingTimeout;
-    window.startMatchmaking = () => {
-        document.getElementById('matching-screen').classList.remove('hidden');
-        const delay = Math.random() * 2000 + 2000;
-        matchingTimeout = setTimeout(() => {
-            startGame();
-        }, delay);
-    };
-
-    window.cancelMatchmaking = () => {
-        clearTimeout(matchingTimeout);
-        document.getElementById('matching-screen').classList.add('hidden');
-    };
-
-    // --- Game Loop & Logic ---
-    
-    function startGame() {
+    // --- In-Game ---
+    function startGame(isHost) {
         showScreen('game');
-        document.getElementById('matching-screen').classList.add('hidden');
         document.getElementById('result-modal').style.display = 'none';
 
         STATE.game.elixir = 5;
         STATE.game.entities = [];
         STATE.game.running = true;
-        
-        let deck = [...CARD_DATA];
-        deck.sort(() => Math.random() - 0.5);
-        
+
+        let deck = [...CARD_DATA].sort(() => Math.random() - 0.5);
         STATE.game.hand = deck.slice(0, 4);
         STATE.game.nextCard = deck[4];
-        STATE.game.cards = deck;
-
-        STATE.game.towers = {
-            'my-king': { hp: TOWER_STATS.king.hp, max: TOWER_STATS.king.hp, el: document.getElementById('my-king'), team: 'my' },
-            'my-left': { hp: TOWER_STATS.princess.hp, max: TOWER_STATS.princess.hp, el: document.getElementById('my-left'), team: 'my' },
-            'my-right': { hp: TOWER_STATS.princess.hp, max: TOWER_STATS.princess.hp, el: document.getElementById('my-right'), team: 'my' },
-            'enemy-king': { hp: TOWER_STATS.king.hp, max: TOWER_STATS.king.hp, el: document.getElementById('enemy-king'), team: 'enemy' },
-            'enemy-left': { hp: TOWER_STATS.princess.hp, max: TOWER_STATS.princess.hp, el: document.getElementById('enemy-left'), team: 'enemy' },
-            'enemy-right': { hp: TOWER_STATS.princess.hp, max: TOWER_STATS.princess.hp, el: document.getElementById('enemy-right'), team: 'enemy' }
+        
+        // 타워 초기화
+        const towers = {
+            'my-king': { max: TOWER_STATS.king.hp, hp: TOWER_STATS.king.hp, el: document.getElementById('my-king'), team: 'my' },
+            'my-left': { max: TOWER_STATS.princess.hp, hp: TOWER_STATS.princess.hp, el: document.getElementById('my-left'), team: 'my' },
+            'my-right': { max: TOWER_STATS.princess.hp, hp: TOWER_STATS.princess.hp, el: document.getElementById('my-right'), team: 'my' },
+            'enemy-king': { max: TOWER_STATS.king.hp, hp: TOWER_STATS.king.hp, el: document.getElementById('enemy-king'), team: 'enemy' },
+            'enemy-left': { max: TOWER_STATS.princess.hp, hp: TOWER_STATS.princess.hp, el: document.getElementById('enemy-left'), team: 'enemy' },
+            'enemy-right': { max: TOWER_STATS.princess.hp, hp: TOWER_STATS.princess.hp, el: document.getElementById('enemy-right'), team: 'enemy' }
         };
+        STATE.game.towers = towers;
 
-        for(let key in STATE.game.towers) {
-            updateTowerHP(key);
-            STATE.game.towers[key].el.style.opacity = '1';
-        }
-
+        for (let k in towers) updateTowerHP(k);
+        
+        // 맵 정리
         document.querySelectorAll('.unit').forEach(e => e.remove());
         document.querySelectorAll('.projectile').forEach(e => e.remove());
 
         renderHand();
         startGameLoop();
+
+        // 상대방 움직임 감지 (Firestore Listener)
+        const movesRef = collection(db, 'artifacts', appId, 'public', 'data', 'games', STATE.game.id, 'moves');
+        STATE.game.unsubscribeMoves = onSnapshot(movesRef, (snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === "added") {
+                    const move = change.doc.data();
+                    // 내 움직임은 무시 (이미 로컬에서 처리함)
+                    if (move.uid !== STATE.auth.uid) {
+                        spawnEnemyFromNetwork(move);
+                    }
+                }
+            });
+        });
+    }
+
+    // 상대방이 유닛을 소환했을 때 (좌표 대칭 변환 중요)
+    function spawnEnemyFromNetwork(move) {
+        const cardData = CARD_DATA.find(c => c.id === move.cardId);
+        if (!cardData) return;
+
+        const arenaRect = document.getElementById('arena').getBoundingClientRect();
+        
+        // 상대가 보낸 좌표 (0~100%)
+        // 상대는 자신의 아래쪽(100%)에서 소환했겠지만, 나에게는 위쪽(0%)이 되어야 함
+        // X축: 상대의 왼쪽 -> 나의 오른쪽 (Mirror X) or 그대로?
+        // 클래시 로얄은 보드가 180도 회전된 형태.
+        // 상대가 (20%, 90%)에 소환 -> 나에게는 (80%, 10%)에 보여야 함.
+        
+        const renderX = (1 - move.rx) * arenaRect.width;
+        const renderY = (1 - move.ry) * arenaRect.height;
+
+        spawnUnit(cardData, renderX, renderY, 'enemy', false); // false = don't send to network
     }
 
     function updateTowerHP(id) {
         const t = STATE.game.towers[id];
-        if (t.hp <= 0) t.hp = 0;
+        if (t.hp < 0) t.hp = 0;
         const pct = (t.hp / t.max) * 100;
-        t.el.querySelector('.hp-bar').style.width = `${pct}%`;
-        if (t.hp <= 0) t.el.style.opacity = '0.2';
+        const bar = t.el.querySelector('.hp-bar');
+        const txt = t.el.querySelector('.hp-text');
+        
+        bar.style.width = `${pct}%`;
+        txt.innerText = Math.floor(t.hp);
+        
+        if (t.hp <= 0) t.el.style.opacity = 0.5;
+        else t.el.style.opacity = 1;
     }
 
     function renderHand() {
         const handEl = document.getElementById('card-hand');
         handEl.innerHTML = '';
-        
         STATE.game.hand.forEach((card, idx) => {
-            const cardEl = document.createElement('div');
-            cardEl.className = 'card';
-            if (STATE.game.elixir < card.cost) cardEl.classList.add('disabled');
-            if (STATE.game.selectedCardIdx === idx) cardEl.classList.add('selected');
-            
-            cardEl.innerHTML = `
-                <div class="card-cost">${card.cost}</div>
-                <div class="card-img">${card.icon}</div>
-                <div style="font-size:0.6rem; text-align:center;">${card.name}</div>
-            `;
-            
-            cardEl.onclick = () => selectCard(idx);
-            handEl.appendChild(cardEl);
+            const el = document.createElement('div');
+            el.className = 'card';
+            if (STATE.game.elixir < card.cost) el.classList.add('disabled');
+            if (STATE.game.selectedCardIdx === idx) el.classList.add('selected');
+            el.innerHTML = `<div class="card-cost">${card.cost}</div><div class="card-img">${card.icon}</div><div>${card.name}</div>`;
+            el.onclick = () => selectCard(idx);
+            handEl.appendChild(el);
         });
-
-        const nextEl = document.getElementById('next-card-icon');
-        nextEl.innerText = STATE.game.nextCard.icon;
-        
+        document.getElementById('next-card-icon').innerText = STATE.game.nextCard.icon;
         updateElixirUI();
     }
 
     function selectCard(idx) {
-        const card = STATE.game.hand[idx];
-        if (STATE.game.elixir < card.cost) return;
-
-        if (STATE.game.selectedCardIdx === idx) {
-            STATE.game.selectedCardIdx = -1;
-        } else {
-            STATE.game.selectedCardIdx = idx;
-        }
+        if (STATE.game.elixir < STATE.game.hand[idx].cost) return;
+        STATE.game.selectedCardIdx = (STATE.game.selectedCardIdx === idx) ? -1 : idx;
         renderHand();
     }
 
-    window.handleArenaClick = (e) => {
+    window.handleArenaClick = async (e) => {
         if (STATE.game.selectedCardIdx === -1) return;
         
         const rect = document.getElementById('arena').getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-
-        if (y < rect.height / 2 && STATE.game.hand[STATE.game.selectedCardIdx].type !== 'spell') {
-            return; 
+        
+        // 내 진영(아래쪽)만 소환 가능 (간단하게 절반)
+        if (y < rect.height * 0.4 && STATE.game.hand[STATE.game.selectedCardIdx].type !== 'spell') {
+            return; // Cannot spawn in enemy territory
         }
 
-        spawnUnit(STATE.game.hand[STATE.game.selectedCardIdx], x, y, 'my');
+        const card = STATE.game.hand[STATE.game.selectedCardIdx];
         
-        const usedCardCost = STATE.game.hand[STATE.game.selectedCardIdx].cost;
-        STATE.game.elixir -= usedCardCost;
-        
-        const usedCard = STATE.game.hand[STATE.game.selectedCardIdx];
+        // 1. 로컬 소환
+        spawnUnit(card, x, y, 'my', true);
+
+        // 2. 자원 소모 및 덱 순환
+        STATE.game.elixir -= card.cost;
         STATE.game.hand[STATE.game.selectedCardIdx] = STATE.game.nextCard;
-        STATE.game.nextCard = usedCard; 
-        
+        STATE.game.nextCard = card; // 단순 순환
         STATE.game.selectedCardIdx = -1;
         renderHand();
+
+        // 3. 네트워크 전송 (비율 좌표 사용)
+        const rx = x / rect.width;
+        const ry = y / rect.height;
+        
+        try {
+            const movesRef = collection(db, 'artifacts', appId, 'public', 'data', 'games', STATE.game.id, 'moves');
+            await addDoc(movesRef, {
+                uid: STATE.auth.uid,
+                cardId: card.id,
+                rx: rx,
+                ry: ry,
+                timestamp: serverTimestamp()
+            });
+        } catch(err) { console.error("Move send error", err); }
     };
 
-    function spawnUnit(cardData, x, y, team) {
-        const unitEl = document.createElement('div');
-        unitEl.className = `unit ${team}`;
-        unitEl.innerText = cardData.icon;
-        unitEl.style.left = x + 'px';
-        unitEl.style.top = y + 'px';
-        unitEl.innerHTML += `<div class="unit-hp"><div class="unit-hp-fill"></div></div>`;
-        document.getElementById('arena').appendChild(unitEl);
+    function spawnUnit(cardData, x, y, team, isLocal) {
+        const div = document.createElement('div');
+        div.className = `unit ${team}`;
+        div.innerText = cardData.icon;
+        div.style.left = x + 'px';
+        div.style.top = y + 'px';
+        div.innerHTML += `<div class="unit-hp"><div class="unit-hp-fill"></div></div>`;
+        document.getElementById('arena').appendChild(div);
 
         const entity = {
-            el: unitEl,
-            x: x,
-            y: y,
+            el: div,
+            x: x, y: y,
             data: cardData,
-            hp: cardData.hp || 1,
-            maxHp: cardData.hp || 1,
+            hp: cardData.hp, maxHp: cardData.hp,
             team: team,
             lastAttack: 0,
             dead: false
@@ -948,17 +1055,37 @@
         if (cardData.type === 'spell') {
             setTimeout(() => {
                 applySpellDamage(entity);
-                unitEl.remove();
+                div.remove();
             }, 500);
         } else {
             STATE.game.entities.push(entity);
         }
     }
 
-    function applySpellDamage(spellEntity) {
-        let target = findNearestTarget(spellEntity, spellEntity.team === 'my' ? 'enemy' : 'my');
-        if (target && target.dist < 100) {
-             takeDamage(target.obj, spellEntity.data.dmg);
+    function applySpellDamage(spell) {
+        // 간단한 범위 데미지 (타워 포함)
+        const targetTeam = spell.team === 'my' ? 'enemy' : 'my';
+        const range = 100; // Pixel range
+        
+        // 유닛
+        STATE.game.entities.forEach(ent => {
+            if (ent.team === targetTeam && Math.hypot(ent.x - spell.x, ent.y - spell.y) < range) {
+                takeDamage(ent, spell.data.dmg);
+            }
+        });
+
+        // 타워
+        for (let k in STATE.game.towers) {
+            const t = STATE.game.towers[k];
+            if (t.team === targetTeam) {
+                const rect = t.el.getBoundingClientRect();
+                const arenaRect = document.getElementById('arena').getBoundingClientRect();
+                const tx = rect.left - arenaRect.left + rect.width/2;
+                const ty = rect.top - arenaRect.top + rect.height/2;
+                if (Math.hypot(tx - spell.x, ty - spell.y) < range) {
+                    takeDamage(t, spell.data.dmg);
+                }
+            }
         }
     }
 
@@ -967,15 +1094,14 @@
         
         let lastTime = Date.now();
         let elixirTimer = 0;
-        let aiTimer = 0;
 
         STATE.game.loopId = setInterval(() => {
             if (!STATE.game.running) return;
-
             const now = Date.now();
             const dt = (now - lastTime) / 1000;
             lastTime = now;
 
+            // 엘릭서 (2.8초당 1)
             elixirTimer += dt;
             if (elixirTimer >= 2.8) {
                 if (STATE.game.elixir < 10) {
@@ -984,99 +1110,82 @@
                 }
                 elixirTimer = 0;
             }
-            updateElixirUI(elixirTimer / 2.8);
-
-            aiTimer += dt;
-            if (aiTimer > 5) {
-                spawnEnemyAI();
-                aiTimer = 0;
-            }
+            updateElixirUI(elixirTimer/2.8);
 
             updateEntities(now);
             checkWinCondition();
-
         }, 50);
     }
 
-    function updateElixirUI(progress = 0) {
-        const fullWidth = STATE.game.elixir * 10 + (progress * 10);
-        document.getElementById('elixir-fill').style.width = `${Math.min(fullWidth, 100)}%`;
+    function updateElixirUI(pct) {
+        const w = (STATE.game.elixir + pct) * 10;
+        document.getElementById('elixir-fill').style.width = `${Math.min(w, 100)}%`;
         document.getElementById('elixir-count').innerText = STATE.game.elixir;
-    }
-
-    function spawnEnemyAI() {
-        const randomCard = CARD_DATA[Math.floor(Math.random() * CARD_DATA.length)];
-        const rect = document.getElementById('arena').getBoundingClientRect();
-        const x = Math.random() * (rect.width - 40) + 20;
-        const y = Math.random() * (rect.height * 0.3) + 20;
-
-        if (randomCard.type !== 'spell') {
-            spawnUnit(randomCard, x, y, 'enemy');
-        }
     }
 
     function updateEntities(now) {
         STATE.game.entities.forEach(ent => {
             if (ent.dead) return;
-
             const targetTeam = ent.team === 'my' ? 'enemy' : 'my';
-            const target = findNearestTarget(ent, targetTeam);
+            const target = findNearest(ent, targetTeam);
 
             if (target) {
-                const rangePx = ent.data.range * 20;
-
-                if (target.dist <= rangePx) {
-                    if (now - ent.lastAttack > 1000) {
+                const range = ent.data.range * 30; // Scale range
+                if (target.dist <= range) {
+                    // Attack
+                    if (now - ent.lastAttack > 1200) { // 1.2s attack speed
                         createProjectile(ent, target.obj);
                         takeDamage(target.obj, ent.data.dmg);
                         ent.lastAttack = now;
+                        // recoil effect
+                        ent.el.style.transform = `translate(-50%, -50%) scale(1.2)`;
+                        setTimeout(() => ent.el.style.transform = `translate(-50%, -50%) scale(1)`, 100);
                     }
                 } else {
+                    // Move
                     const dx = target.x - ent.x;
                     const dy = target.y - ent.y;
                     const angle = Math.atan2(dy, dx);
-                    const speed = ent.data.speed * 2;
-
+                    const speed = ent.data.speed * 1.5;
                     ent.x += Math.cos(angle) * speed;
                     ent.y += Math.sin(angle) * speed;
-                    
                     ent.el.style.left = ent.x + 'px';
                     ent.el.style.top = ent.y + 'px';
                 }
             }
         });
-
         STATE.game.entities = STATE.game.entities.filter(e => !e.dead);
     }
 
-    function findNearestTarget(me, targetTeam) {
+    function findNearest(me, team) {
         let nearest = null;
         let minDist = Infinity;
-
+        
+        // 1. Units
         if (me.data.target === 'all') {
             STATE.game.entities.forEach(other => {
-                if (other.team === targetTeam && !other.dead) {
+                if (other.team === team && !other.dead) {
                     const d = Math.hypot(me.x - other.x, me.y - other.y);
                     if (d < minDist) {
                         minDist = d;
-                        nearest = { obj: other, x: other.x, y: other.y, type: 'unit', dist: d };
+                        nearest = { obj: other, x: other.x, y: other.y, dist: d };
                     }
                 }
             });
         }
-
-        for (let key in STATE.game.towers) {
-            const tower = STATE.game.towers[key];
-            if (tower.team === targetTeam && tower.hp > 0) {
-                const tRect = tower.el.getBoundingClientRect();
-                const aRect = document.getElementById('arena').getBoundingClientRect();
-                const tx = tRect.left - aRect.left + tRect.width/2;
-                const ty = tRect.top - aRect.top + tRect.height/2;
-
+        
+        // 2. Towers
+        for (let k in STATE.game.towers) {
+            const t = STATE.game.towers[k];
+            if (t.team === team && t.hp > 0) {
+                const rect = t.el.getBoundingClientRect();
+                const arenaRect = document.getElementById('arena').getBoundingClientRect();
+                const tx = rect.left - arenaRect.left + rect.width/2;
+                const ty = rect.top - arenaRect.top + rect.height/2;
                 const d = Math.hypot(me.x - tx, me.y - ty);
                 if (d < minDist) {
                     minDist = d;
-                    nearest = { obj: tower, x: tx, y: ty, type: 'tower', dist: d };
+                    nearest = { obj: t, x: tx, y: ty, dist: d };
                 }
             }
         }
@@ -1086,15 +1195,21 @@
     function takeDamage(obj, dmg) {
         obj.hp -= dmg;
         if (obj.el.classList.contains('tower')) {
-            for(let key in STATE.game.towers) {
-                if(STATE.game.towers[key] === obj) {
-                    updateTowerHP(key);
+            // 타워 피격 효과
+            obj.el.style.filter = 'brightness(2) sepia(1) hue-rotate(-50deg)';
+            setTimeout(() => obj.el.style.filter = 'drop-shadow(0 5px 5px rgba(0,0,0,0.6))', 100);
+            
+            // Tower Key 찾기
+            for(let k in STATE.game.towers) {
+                if (STATE.game.towers[k] === obj) {
+                    updateTowerHP(k);
                     break;
                 }
             }
         } else {
+            // 유닛 데미지
             const pct = (obj.hp / obj.maxHp) * 100;
-            obj.el.querySelector('.unit-hp-fill').style.width = `${pct}%`;
+            obj.el.querySelector('.unit-hp-fill').style.width = `${Math.max(0, pct)}%`;
             if (obj.hp <= 0) {
                 obj.dead = true;
                 obj.el.remove();
@@ -1102,49 +1217,43 @@
         }
     }
 
-    function createProjectile(from, toObj) {
+    function createProjectile(from, to) {
         let tx, ty;
-        if (toObj.el.classList.contains('tower')) {
-            const tRect = toObj.el.getBoundingClientRect();
-            const aRect = document.getElementById('arena').getBoundingClientRect();
-            tx = tRect.left - aRect.left + tRect.width/2;
-            ty = tRect.top - aRect.top + tRect.height/2;
+        if (to.el.classList.contains('tower')) {
+            const r = to.el.getBoundingClientRect();
+            const ar = document.getElementById('arena').getBoundingClientRect();
+            tx = r.left - ar.left + r.width/2;
+            ty = r.top - ar.top + r.height/2;
         } else {
-            tx = toObj.x;
-            ty = toObj.y;
+            tx = to.x; ty = to.y;
         }
-
+        
         const p = document.createElement('div');
         p.className = 'projectile';
         p.style.left = from.x + 'px';
         p.style.top = from.y + 'px';
         document.getElementById('arena').appendChild(p);
-
+        
         p.animate([
             { left: from.x + 'px', top: from.y + 'px' },
             { left: tx + 'px', top: ty + 'px' }
-        ], {
-            duration: 200,
-            easing: 'linear'
-        }).onfinish = () => p.remove();
+        ], { duration: 200, easing: 'linear' }).onfinish = () => p.remove();
     }
 
     function checkWinCondition() {
-        if (STATE.game.towers['enemy-king'].hp <= 0) {
-            endGame(true);
-        } else if (STATE.game.towers['my-king'].hp <= 0) {
-            endGame(false);
-        }
+        if (STATE.game.towers['enemy-king'].hp <= 0) endGame(true);
+        else if (STATE.game.towers['my-king'].hp <= 0) endGame(false);
     }
 
-    function endGame(win) {
+    async function endGame(win) {
         STATE.game.running = false;
         clearInterval(STATE.game.loopId);
-        
+        if (STATE.game.unsubscribeMoves) STATE.game.unsubscribeMoves();
+
         const modal = document.getElementById('result-modal');
         const text = document.getElementById('result-text');
         modal.style.display = 'flex';
-        
+
         if (win) {
             text.innerText = "VICTORY!";
             text.style.color = "gold";
@@ -1154,8 +1263,12 @@
             text.style.color = "#e74c3c";
             STATE.user.trophies = Math.max(0, STATE.user.trophies - 20);
         }
-        // 저장
-        saveUserData();
+        await saveUserData();
+        
+        // 게임 종료 처리 (방 정리 등)
+        if (STATE.game.id && STATE.game.role === 'host') {
+            try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'games', STATE.game.id)); } catch(e){}
+        }
     }
 
     window.returnToHome = () => {
@@ -1163,9 +1276,8 @@
         updateHomeUI();
     };
 
-    // --- Button Listener ---
+    // Auto-bind
     document.getElementById('google-login-btn').addEventListener('click', window.handleLoginClick);
-
 </script>
 
 </body>
